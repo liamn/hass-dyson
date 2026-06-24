@@ -2,17 +2,17 @@
   "domain": "hass_dyson",
   "name": "Dyson",
   "codeowners": [
-    "@cmgrayb"
+    "@liamn"
   ],
   "config_flow": true,
   "dependencies": [
     "bluetooth"
   ],
-  "documentation": "https://github.com/cmgrayb/hass-dyson",
+  "documentation": "https://github.com/liamn/hass-dyson",
   "homekit": {},
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/cmgrayb/hass-dyson/issues",
+  "issue_tracker": "https://github.com/liamn/hass-dyson/issues",
   "loggers": [
     "custom_components.hass_dyson"
   ],
@@ -20,5 +20,5 @@
   "requirements": [
     "libdyson-rest==0.14.1"
   ],
-  "version": "0.34.0"
+  "version": "1.0.0"
 }
