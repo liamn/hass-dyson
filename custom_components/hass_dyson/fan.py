@@ -9,7 +9,7 @@ Key Features:
     - 10-level speed control (1-10) mapped to percentage
     - Oscillation control with angle specification support
     - Direction control (forward/reverse airflow)
-    - Preset modes: Auto, Manual, Heat (device-dependent)
+    - Preset modes: Auto, Heat (device-dependent)
     - Night mode integration for quiet operation
     - Climate integration for heating-enabled devices
     - Real-time state updates via MQTT coordinator
@@ -17,7 +17,7 @@ Key Features:
 
 Supported Device Features (capability-dependent):
     - SET_SPEED: All devices (1-10 speed levels)
-    - PRESET_MODE: All devices (Auto, Manual, Heat if available)
+    - PRESET_MODE: All devices (Auto, Heat if available)
     - TURN_ON/TURN_OFF: All devices
     - OSCILLATE: Devices with oscillation capability (oson state)
     - DIRECTION: Devices with direction control (fdir state)
@@ -166,7 +166,6 @@ class DysonFan(DysonEntity, FanEntity):
 
     # Preset variables for better maintenance
     PRESET_MODE_AUTO = "auto"
-    PRESET_MODE_MANUAL = "manual"
     PRESET_MODE_HEAT = "heat"
 
     def __init__(self, coordinator: DysonDataUpdateCoordinator) -> None:
@@ -192,8 +191,8 @@ class DysonFan(DysonEntity, FanEntity):
         - Heating: Enabled if 'Heating' in coordinator.device_capabilities
 
         Preset Modes:
-        - Standard devices: ["Auto", "Manual"]
-        - Heating devices: ["Auto", "Manual", "Heat"]
+        - Standard devices: ["Auto"]
+        - Heating devices: ["Auto", "Heat"]
 
         Note:
             Feature detection is dynamic and based on actual device capabilities
@@ -231,7 +230,6 @@ class DysonFan(DysonEntity, FanEntity):
         if self._has_heating:
             self._attr_preset_modes = [
                 self.PRESET_MODE_AUTO,
-                self.PRESET_MODE_MANUAL,
                 self.PRESET_MODE_HEAT,
             ]
             # Add climate-specific attributes for heating devices
@@ -249,7 +247,7 @@ class DysonFan(DysonEntity, FanEntity):
             ]
             self._attr_hvac_mode = HVACMode.OFF
         else:
-            self._attr_preset_modes = [self.PRESET_MODE_AUTO, self.PRESET_MODE_MANUAL]
+            self._attr_preset_modes = [self.PRESET_MODE_AUTO]
 
         # Initialize state attributes to ensure clean state
         self._attr_is_on = None  # Will be set properly in first coordinator update
@@ -341,15 +339,10 @@ class DysonFan(DysonEntity, FanEntity):
                 )
                 if heating_mode == "HEAT":
                     self._attr_preset_mode = self.PRESET_MODE_HEAT
-                elif is_auto_mode:
-                    self._attr_preset_mode = self.PRESET_MODE_AUTO
                 else:
-                    self._attr_preset_mode = self.PRESET_MODE_MANUAL
+                    self._attr_preset_mode = self.PRESET_MODE_AUTO
             else:
-                # Non-heating devices use simple Auto/Manual logic
-                self._attr_preset_mode = (
-                    self.PRESET_MODE_AUTO if is_auto_mode else self.PRESET_MODE_MANUAL
-                )
+                self._attr_preset_mode = self.PRESET_MODE_AUTO
 
             # Update oscillation state from device data if supported
             if self._oscillation_supported:
@@ -463,7 +456,7 @@ class DysonFan(DysonEntity, FanEntity):
 
         Args:
             percentage: Fan speed percentage (0-100)
-            preset_mode: Preset mode to set ("Auto", "Manual", "Heat")
+            preset_mode: Preset mode to set ("Auto", "Heat")
             **kwargs: Additional arguments
         """
         self.hass.create_task(self.async_turn_on(percentage, preset_mode, **kwargs))
@@ -620,7 +613,7 @@ class DysonFan(DysonEntity, FanEntity):
         FanEntity abstract method. It delegates to the async implementation.
 
         Args:
-            preset_mode: Preset mode to set ("Auto", "Manual", "Heat")
+            preset_mode: Preset mode to set ("Auto", "Heat")
         """
         self.hass.create_task(self.async_set_preset_mode(preset_mode))
 
@@ -632,8 +625,6 @@ class DysonFan(DysonEntity, FanEntity):
         try:
             if preset_mode == self.PRESET_MODE_AUTO:
                 await self.coordinator.device.set_auto_mode(True)
-            elif preset_mode == self.PRESET_MODE_MANUAL:
-                await self.coordinator.device.set_auto_mode(False)
             elif preset_mode == self.PRESET_MODE_HEAT and self._has_heating:
                 # Enable heating mode
                 await self.coordinator.device.set_heating_mode("HEAT")
